@@ -97,7 +97,7 @@
     </div>
 
     <div class="email">
-        <a href="mailto:contact@k731.ai">contact@k731.ai</a>
+        <a href="mailto:k.731.aitech@gmail.com">k.731.aitech@gmail.com</a>
     </div>
 
     <script>
@@ -119,103 +119,141 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Flowing space-time fabric effect
-        let offsetX = 0;
-        let offsetY = 0;
-        let flowPhase = 0;
+        // Droplet ripple effect - like water drops creating expanding waves
+        let ripples = [];
+        let nextRippleTime = 0;
 
-        function drawFlowingGrid() {
+        function createRipple() {
+            // Random position on screen
+            const padding = 100;
+            const x = padding + Math.random() * (width - 2 * padding);
+            const y = padding + Math.random() * (height - 2 * padding);
+            
+            ripples.push({
+                x: x,
+                y: y,
+                radius: 0,
+                maxRadius: 250 + Math.random() * 150,
+                intensity: 1,
+                speed: 1.5 + Math.random() * 1
+            });
+        }
+
+        function drawRippleGrid() {
             ctx.fillStyle = '#000000';
             ctx.fillRect(0, 0, width, height);
 
-            // Subtle space-time fabric
-            ctx.globalAlpha = 0.25;
+            // Very subtle grid
+            ctx.globalAlpha = 0.12;
             ctx.strokeStyle = '#FFFFFF';
             ctx.lineWidth = 0.8;
 
-            // Calculate flowing offsets - moves in various directions
-            flowPhase += 0.008;
-            
-            // Primary flow: right to left with wave motion
-            offsetX = (time * 20) % (gridSize * 2);
-            
-            // Secondary flow: up and down wave
-            offsetY = Math.sin(flowPhase) * 30 + Math.cos(flowPhase * 0.7) * 20;
-            
-            // Additional random drift
-            const driftX = Math.sin(flowPhase * 1.3) * 15;
-            const driftY = Math.cos(flowPhase * 0.9) * 25;
-
-            const totalOffsetX = offsetX + driftX;
-            const totalOffsetY = offsetY + driftY;
-
-            // Draw vertical lines flowing across screen
-            for (let x = -gridSize; x <= width + gridSize; x += gridSize) {
-                const waveY = Math.sin((x + time * 30) * 0.01) * 10;
-                const waveX = Math.cos((x + time * 20) * 0.015) * 5;
-                
+            // Draw static base grid with ripple distortions
+            for (let x = 0; x <= width; x += gridSize) {
                 ctx.beginPath();
-                for (let y = 0; y <= height; y += 8) {
-                    const distortY = Math.sin(y * 0.02 + time * 2) * 3;
-                    const finalX = x - totalOffsetX + waveX + distortY;
-                    const finalY = y + waveY + totalOffsetY * 0.3;
-                    
+                for (let y = 0; y <= height; y += 5) {
+                    let distortX = 0;
+                    let distortY = 0;
+
+                    // Apply ripple distortions
+                    for (let ripple of ripples) {
+                        const dist = Math.sqrt((x - ripple.x) ** 2 + (y - ripple.y) ** 2);
+                        const rippleWidth = 40;
+                        
+                        if (Math.abs(dist - ripple.radius) < rippleWidth) {
+                            const strength = (1 - Math.abs(dist - ripple.radius) / rippleWidth) * ripple.intensity;
+                            const angle = Math.atan2(y - ripple.y, x - ripple.x);
+                            distortX += Math.cos(angle) * strength * 15;
+                            distortY += Math.sin(angle) * strength * 15;
+                        }
+                    }
+
                     if (y === 0) {
-                        ctx.moveTo(finalX, finalY);
+                        ctx.moveTo(x + distortX, y + distortY);
                     } else {
-                        ctx.lineTo(finalX, finalY);
+                        ctx.lineTo(x + distortX, y + distortY);
                     }
                 }
                 ctx.stroke();
             }
 
-            // Draw horizontal lines with wave motion
-            for (let y = -gridSize; y <= height + gridSize; y += gridSize) {
-                const waveX = Math.cos((y + time * 25) * 0.012) * 8;
-                
+            // Draw horizontal lines
+            for (let y = 0; y <= height; y += gridSize) {
                 ctx.beginPath();
-                for (let x = 0; x <= width; x += 8) {
-                    const distortX = Math.cos(x * 0.02 + time * 1.5) * 4;
-                    const finalX = x + waveX + distortX;
-                    const finalY = y + totalOffsetY + Math.sin(x * 0.01) * 2;
-                    
+                for (let x = 0; x <= width; x += 5) {
+                    let distortX = 0;
+                    let distortY = 0;
+
+                    for (let ripple of ripples) {
+                        const dist = Math.sqrt((x - ripple.x) ** 2 + (y - ripple.y) ** 2);
+                        const rippleWidth = 40;
+                        
+                        if (Math.abs(dist - ripple.radius) < rippleWidth) {
+                            const strength = (1 - Math.abs(dist - ripple.radius) / rippleWidth) * ripple.intensity;
+                            const angle = Math.atan2(y - ripple.y, x - ripple.x);
+                            distortX += Math.cos(angle) * strength * 15;
+                            distortY += Math.sin(angle) * strength * 15;
+                        }
+                    }
+
                     if (x === 0) {
-                        ctx.moveTo(finalX, finalY);
+                        ctx.moveTo(x + distortX, y + distortY);
                     } else {
-                        ctx.lineTo(finalX, finalY);
+                        ctx.lineTo(x + distortX, y + distortY);
                     }
                 }
                 ctx.stroke();
             }
 
-            // Draw small grid nodes (dots)
-            const nodeSize = 2;
+            // Draw grid nodes at intersections
             for (let x = 0; x <= width; x += gridSize) {
                 for (let y = 0; y <= height; y += gridSize) {
-                    const waveX = Math.cos((y + time * 25) * 0.012) * 8;
-                    const waveY = Math.sin((x + time * 30) * 0.01) * 10;
-                    
-                    const finalX = x - totalOffsetX + waveX;
-                    const finalY = y + totalOffsetY + waveY;
-                    
-                    // Only draw if within bounds
-                    if (finalX > -5 && finalX < width + 5 && finalY > -5 && finalY < height + 5) {
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.globalAlpha = 0.05 + Math.sin(time * 2 + x * 0.1 + y * 0.1) * 0.03;
-                        ctx.beginPath();
-                        ctx.arc(finalX, finalY, nodeSize / 2, 0, Math.PI * 2);
-                        ctx.fill();
+                    let distortX = 0;
+                    let distortY = 0;
+
+                    for (let ripple of ripples) {
+                        const dist = Math.sqrt((x - ripple.x) ** 2 + (y - ripple.y) ** 2);
+                        const rippleWidth = 40;
+                        
+                        if (Math.abs(dist - ripple.radius) < rippleWidth) {
+                            const strength = (1 - Math.abs(dist - ripple.radius) / rippleWidth) * ripple.intensity;
+                            const angle = Math.atan2(y - ripple.y, x - ripple.x);
+                            distortX += Math.cos(angle) * strength * 15;
+                            distortY += Math.sin(angle) * strength * 15;
+                        }
                     }
+
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.globalAlpha = 0.15;
+                    ctx.beginPath();
+                    ctx.arc(x + distortX, y + distortY, 2, 0, Math.PI * 2);
+                    ctx.fill();
                 }
             }
 
             ctx.globalAlpha = 1;
+
+            // Update ripples
+            for (let i = ripples.length - 1; i >= 0; i--) {
+                ripples[i].radius += ripples[i].speed;
+                ripples[i].intensity *= 0.985; // Fade out
+                
+                if (ripples[i].intensity < 0.05 || ripples[i].radius > ripples[i].maxRadius) {
+                    ripples.splice(i, 1);
+                }
+            }
+
+            // Create new ripple occasionally
+            if (time > nextRippleTime) {
+                createRipple();
+                nextRippleTime = time + 2 + Math.random() * 3; // Every 2-5 seconds
+            }
         }
 
         // Animation loop
         function animate() {
             time += 0.02;
-            drawFlowingGrid();
+            drawRippleGrid();
             requestAnimationFrame(animate);
         }
 
